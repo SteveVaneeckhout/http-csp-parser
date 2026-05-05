@@ -1,0 +1,15 @@
+import type { Issue, ParsedDirective } from "./types.js";
+export type Rule = (directives: readonly ParsedDirective[]) => readonly Issue[];
+export declare const ruleDuplicateDirective: Rule;
+export declare const ruleDuplicateSource: Rule;
+export declare const ruleUnknownDirective: Rule;
+export declare const ruleNoneWithOtherSources: Rule;
+export declare const ruleNoValueDirectiveWithArguments: Rule;
+export declare const ruleMissingSourceList: Rule;
+export declare const ruleDeprecatedDirective: Rule;
+export declare const ruleMissingDefaultOrScriptSrc: Rule;
+export declare const ruleStrictDynamicHostIgnored: Rule;
+export declare const ruleUnsafeInlineWithUnsafeEval: Rule;
+export declare const ruleBroadScheme: Rule;
+export declare const ALL_RULES: readonly Rule[];
+export declare function runRules(directives: readonly ParsedDirective[]): readonly Issue[];

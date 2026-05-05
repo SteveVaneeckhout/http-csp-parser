@@ -1,0 +1,12 @@
+export declare const FETCH_DIRECTIVES: ReadonlySet<string>;
+export declare const DOCUMENT_DIRECTIVES: ReadonlySet<string>;
+export declare const NAVIGATION_DIRECTIVES: ReadonlySet<string>;
+export declare const REPORTING_DIRECTIVES: ReadonlySet<string>;
+export declare const TRUSTED_TYPES_DIRECTIVES: ReadonlySet<string>;
+export declare const NO_VALUE_DIRECTIVES: ReadonlySet<string>;
+export declare const DEPRECATED_DIRECTIVES: ReadonlySet<string>;
+export declare const KNOWN_DIRECTIVES: ReadonlySet<string>;
+export declare const REQUIRES_SOURCE_LIST: ReadonlySet<string>;
+export declare const SOURCE_KEYWORDS: ReadonlySet<string>;
+export declare const NONE_KEYWORD = "'none'";
+export declare const KNOWN_SCHEMES: ReadonlySet<string>;
