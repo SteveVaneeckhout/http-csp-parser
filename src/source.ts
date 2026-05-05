@@ -10,9 +10,9 @@ export interface ClassifyResult {
 const QUOTED_RE = /^'[^']*'$/;
 const NONCE_RE = /^'nonce-([A-Za-z0-9+/_-]+=*)'$/i;
 const HASH_RE = /^'(sha256|sha384|sha512)-([A-Za-z0-9+/_-]+=*)'$/i;
-const SCHEME_ONLY_RE = /^([a-z][a-z0-9+.\-]*):$/i;
+const SCHEME_ONLY_RE = /^([a-z][a-z0-9+.-]*):$/i;
 const HOST_RE =
-  /^(?:([a-z][a-z0-9+.\-]*):\/\/)?(\*|(?:\*\.)?[a-z0-9](?:[a-z0-9.\-]*[a-z0-9])?)(?::([0-9]+|\*))?(\/[^\s]*)?$/i;
+  /^(?:([a-z][a-z0-9+.-]*):\/\/)?(\*|(?:\*\.)?[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?)(?::([0-9]+|\*))?(\/[^\s]*)?$/i;
 const REPORT_TO_TOKEN_RE = /^[A-Za-z0-9_-]+$/;
 
 export function classifySource(token: string, directiveName: string): ClassifyResult {
