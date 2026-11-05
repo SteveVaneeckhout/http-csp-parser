@@ -15,6 +15,25 @@ const HOST_RE =
   /^(?:([a-z][a-z0-9+.-]*):\/\/)?(\*|(?:\*\.)?[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?)(?::([0-9]+|\*))?(\/[^\s]*)?$/i;
 const REPORT_TO_TOKEN_RE = /^[A-Za-z0-9_-]+$/;
 
+const DIGEST_BYTES: Readonly<Record<HashAlgorithm, number>> = {
+  sha256: 32,
+  sha384: 48,
+  sha512: 64,
+};
+
+/**
+ * Byte length of a hash-source digest, or null if it isn't decodable. CSP accepts both
+ * the base64 and base64url alphabets (even mixed), and padding is optional.
+ */
+function decodedDigestLength(value: string): number | null {
+  const base64 = value.replaceAll("-", "+").replaceAll("_", "/");
+  try {
+    return Uint8Array.fromBase64(base64, { lastChunkHandling: "loose" }).byteLength;
+  } catch {
+    return null;
+  }
+}
+
 export function classifySource(token: string, directiveName: string): ClassifyResult {
   if (directiveName === "report-uri") {
     return {
@@ -138,15 +157,28 @@ function classifyQuoted(token: string, directiveName: string): ClassifyResult {
   ) {
     const match = HASH_RE.exec(token);
     if (match) {
+      const algorithm = match[1]!.toLowerCase() as HashAlgorithm;
+      const value = match[2]!;
+      const digestBytes = decodedDigestLength(value);
+      const expectedBytes = DIGEST_BYTES[algorithm];
       return {
-        source: {
-          raw: token,
-          kind: "hash",
-          algorithm: match[1]!.toLowerCase() as HashAlgorithm,
-          value: match[2]!,
-        },
+        source: { raw: token, kind: "hash", algorithm, value },
         errors: [],
-        warnings: [],
+        warnings:
+          digestBytes === expectedBytes
+            ? []
+            : [
+                {
+                  code: "hash-length-mismatch",
+                  level: "warning",
+                  message:
+                    digestBytes === null
+                      ? `Hash "${token}" in "${directiveName}" is not valid base64, so it can never match.`
+                      : `Hash "${token}" in "${directiveName}" decodes to ${digestBytes} bytes, but a ${algorithm} digest is ${expectedBytes} bytes, so it can never match.`,
+                  directive: directiveName,
+                  source: token,
+                },
+              ],
       };
     }
     return {

@@ -11,7 +11,7 @@ Made with Claude.ai
 npm install http-csp-parser
 ```
 
-Requires Node.js **24.15** or newer (ESM-only).
+Requires Node.js **26.13** or newer (ESM-only).
 
 ## Quick start
 
@@ -117,6 +117,7 @@ interface Issue {
 | `strict-dynamic-host-ignored`       | A host or scheme source is listed alongside `'strict-dynamic'`, where browsers will ignore it.                                         |
 | `broad-scheme`                      | A fetch directive includes the bare `http:` or `https:` scheme as a source.                                                            |
 | `unknown-source-keyword`            | A `'…'`-quoted token is not a recognized CSP source keyword.                                                                           |
+| `hash-length-mismatch`              | A hash source's digest does not decode to the size of its algorithm (32/48/64 bytes for sha256/384/512), so it can never match.        |
 
 ## Examples
 

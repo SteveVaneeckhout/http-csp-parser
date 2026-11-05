@@ -47,16 +47,12 @@ export const DEPRECATED_DIRECTIVES: ReadonlySet<string> = new Set([
   "report-uri",
 ]);
 
-export const KNOWN_DIRECTIVES: ReadonlySet<string> = new Set([
-  ...FETCH_DIRECTIVES,
-  ...DOCUMENT_DIRECTIVES,
-  ...NAVIGATION_DIRECTIVES,
-  ...REPORTING_DIRECTIVES,
-  ...TRUSTED_TYPES_DIRECTIVES,
-  ...NO_VALUE_DIRECTIVES,
-  "plugin-types",
-  "referrer",
-]);
+export const KNOWN_DIRECTIVES: ReadonlySet<string> = FETCH_DIRECTIVES.union(DOCUMENT_DIRECTIVES)
+  .union(NAVIGATION_DIRECTIVES)
+  .union(REPORTING_DIRECTIVES)
+  .union(TRUSTED_TYPES_DIRECTIVES)
+  .union(NO_VALUE_DIRECTIVES)
+  .union(new Set(["plugin-types", "referrer"]));
 
 export const REQUIRES_SOURCE_LIST: ReadonlySet<string> = new Set([
   ...FETCH_DIRECTIVES,

@@ -10,6 +10,7 @@ export type IssueCode =
   | "invalid-source-syntax"
   | "invalid-nonce"
   | "invalid-hash"
+  | "hash-length-mismatch"
   | "none-with-other-sources"
   | "no-value-directive-with-arguments"
   | "missing-source-list"

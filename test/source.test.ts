@@ -1,5 +1,40 @@
+import { hash } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import { classifySource } from "../src/source.js";
+
+describe("classifySource – hash digest length", () => {
+  it.each(["sha256", "sha384", "sha512"] as const)(
+    "accepts a real %s digest in base64 without warnings",
+    (algo) => {
+      const digest = hash(algo, "alert(1)", "base64");
+      const r = classifySource(`'${algo}-${digest}'`, "script-src");
+      expect(r.errors).toEqual([]);
+      expect(r.warnings).toEqual([]);
+    },
+  );
+
+  it("accepts a base64url digest without padding", () => {
+    const digest = hash("sha256", "alert(1)", "base64url");
+    const r = classifySource(`'sha256-${digest}'`, "script-src");
+    expect(r.warnings).toEqual([]);
+  });
+
+  it("warns when the digest length does not match the algorithm", () => {
+    const digest = hash("sha256", "alert(1)", "base64");
+    const r = classifySource(`'sha512-${digest}'`, "script-src");
+    expect(r.errors).toEqual([]);
+    expect(r.warnings).toHaveLength(1);
+    expect(r.warnings[0]?.code).toBe("hash-length-mismatch");
+    expect(r.warnings[0]?.message).toContain("decodes to 32 bytes");
+  });
+
+  it("warns when the digest is not decodable base64", () => {
+    const r = classifySource("'sha256-A'", "script-src");
+    expect(r.errors).toEqual([]);
+    expect(r.warnings[0]?.code).toBe("hash-length-mismatch");
+    expect(r.warnings[0]?.message).toContain("not valid base64");
+  });
+});
 
 describe("classifySource", () => {
   it("classifies bare '*' as wildcard host with a warning", () => {
