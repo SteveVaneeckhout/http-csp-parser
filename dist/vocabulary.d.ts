@@ -7,6 +7,8 @@ export declare const OTHER_DIRECTIVES: ReadonlySet<string>;
 export declare const NO_VALUE_DIRECTIVES: ReadonlySet<string>;
 export declare const DEPRECATED_DIRECTIVES: ReadonlySet<string>;
 export declare const KNOWN_DIRECTIVES: ReadonlySet<string>;
+export declare const META_IGNORED_DIRECTIVES: ReadonlySet<string>;
+export declare const REPORT_ONLY_IGNORED_DIRECTIVES: ReadonlySet<string>;
 export declare const REQUIRES_SOURCE_LIST: ReadonlySet<string>;
 export declare const SOURCE_KEYWORDS: ReadonlySet<string>;
 export declare const NONE_KEYWORD = "'none'";

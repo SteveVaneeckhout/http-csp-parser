@@ -1,7 +1,7 @@
 import { classifySource } from "./source.js";
 import { tokenize } from "./tokenize.js";
 import { runRules } from "./rules.js";
-export function parse(input) {
+export function parse(input, options = {}) {
     const errors = [];
     const warnings = [];
     const directives = [];
@@ -17,7 +17,10 @@ export function parse(input) {
         }
         directives.push({ name: td.name, raw: td.raw, sources });
     }
-    for (const issue of runRules(directives)) {
+    for (const issue of runRules(directives, {
+        source: options.source ?? "header",
+        disposition: options.disposition ?? "enforce",
+    })) {
         if (issue.level === "error") {
             errors.push(issue);
         }

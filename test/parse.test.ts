@@ -130,4 +130,40 @@ describe("parse (end-to-end)", () => {
       ["invalid-source-syntax", "https://us.plus500.com"],
     ]);
   });
+
+  describe("source and disposition options", () => {
+    const policy =
+      "default-src 'self'; frame-ancestors 'none'; sandbox allow-scripts; report-uri /csp; report-to csp";
+
+    it("treats no options like an enforced header policy", () => {
+      const codes = (r: ReturnType<typeof parse>) =>
+        [...r.errors, ...r.warnings].map((i) => i.code);
+      expect(codes(parse(policy))).toEqual(
+        codes(parse(policy, { source: "header", disposition: "enforce" })),
+      );
+      expect(codes(parse(policy))).not.toContain("directive-ignored");
+    });
+
+    it("flags sandbox in a Content-Security-Policy-Report-Only header", () => {
+      const r = parse(policy, { disposition: "report" });
+      expect(r.errors.map((e) => [e.code, e.directive])).toEqual([
+        ["directive-ignored", "sandbox"],
+      ]);
+    });
+
+    it("flags the directives a meta policy can't use", () => {
+      const r = parse(policy, { source: "meta" });
+      expect(r.errors.map((e) => [e.code, e.directive])).toEqual([
+        ["directive-ignored", "frame-ancestors"],
+        ["directive-ignored", "sandbox"],
+        ["directive-ignored", "report-uri"],
+      ]);
+      expect(r.warnings).toEqual([]);
+    });
+
+    it("flags a report-only meta policy as ignored as a whole", () => {
+      const r = parse(policy, { source: "meta", disposition: "report" });
+      expect(r.errors.map((e) => e.code)).toEqual(["policy-ignored"]);
+    });
+  });
 });

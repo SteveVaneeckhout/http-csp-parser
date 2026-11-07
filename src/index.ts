@@ -6,6 +6,9 @@ export type {
   IssueLevel,
   ParsedDirective,
   ParsedSource,
+  ParseOptions,
   ParseResult,
+  PolicyDisposition,
+  PolicySource,
   SourceKind,
 } from "./types.js";

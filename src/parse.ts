@@ -1,9 +1,9 @@
 import { classifySource } from "./source.js";
 import { tokenize } from "./tokenize.js";
 import { runRules } from "./rules.js";
-import type { Issue, ParsedDirective, ParsedSource, ParseResult } from "./types.js";
+import type { Issue, ParsedDirective, ParsedSource, ParseOptions, ParseResult } from "./types.js";
 
-export function parse(input: string): ParseResult {
+export function parse(input: string, options: ParseOptions = {}): ParseResult {
   const errors: Issue[] = [];
   const warnings: Issue[] = [];
   const directives: ParsedDirective[] = [];
@@ -22,7 +22,10 @@ export function parse(input: string): ParseResult {
     directives.push({ name: td.name, raw: td.raw, sources });
   }
 
-  for (const issue of runRules(directives)) {
+  for (const issue of runRules(directives, {
+    source: options.source ?? "header",
+    disposition: options.disposition ?? "enforce",
+  })) {
     if (issue.level === "error") {
       errors.push(issue);
     } else {

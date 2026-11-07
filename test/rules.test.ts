@@ -5,10 +5,12 @@ import {
   ruleDeprecatedDirective,
   ruleDuplicateDirective,
   ruleDuplicateSource,
+  ruleIgnoredDirective,
   ruleMissingDefaultOrScriptSrc,
   ruleMissingSourceList,
   ruleNoneWithOtherSources,
   ruleNoValueDirectiveWithArguments,
+  rulePolicyIgnored,
   ruleReportUriWithoutReportTo,
   ruleStrictDynamicHostIgnored,
   ruleUnknownDirective,
@@ -357,6 +359,70 @@ describe("ruleBroadScheme", () => {
   });
 });
 
+describe("ruleIgnoredDirective", () => {
+  const policy = [dir("sandbox"), dir("frame-ancestors"), dir("report-uri"), dir("report-to")];
+
+  it("flags nothing for an enforced header policy (the default)", () => {
+    expect(ruleIgnoredDirective(policy)).toEqual([]);
+  });
+
+  it("flags sandbox in a report-only header", () => {
+    const issues = ruleIgnoredDirective(policy, { source: "header", disposition: "report" });
+    expect(issues).toEqual([
+      {
+        code: "directive-ignored",
+        level: "error",
+        message: 'Directive "sandbox" is ignored in a Content-Security-Policy-Report-Only policy.',
+        directive: "sandbox",
+      },
+    ]);
+  });
+
+  it("flags sandbox, frame-ancestors and report-uri in a meta policy", () => {
+    const issues = ruleIgnoredDirective(policy, { source: "meta", disposition: "enforce" });
+    expect(issues.map((i) => [i.code, i.level, i.directive])).toEqual([
+      ["directive-ignored", "error", "sandbox"],
+      ["directive-ignored", "error", "frame-ancestors"],
+      ["directive-ignored", "error", "report-uri"],
+    ]);
+    expect(issues[0]?.message).toContain("<meta> element");
+  });
+
+  it("stays quiet for a report-only meta policy, which is ignored as a whole", () => {
+    expect(ruleIgnoredDirective(policy, { source: "meta", disposition: "report" })).toEqual([]);
+  });
+});
+
+describe("rulePolicyIgnored", () => {
+  it("flags a report-only policy delivered through meta", () => {
+    const issues = rulePolicyIgnored([dir("default-src")], {
+      source: "meta",
+      disposition: "report",
+    });
+    expect(issues.map((i) => [i.code, i.level])).toEqual([["policy-ignored", "error"]]);
+  });
+
+  it.each([
+    ["header", "enforce"],
+    ["header", "report"],
+    ["meta", "enforce"],
+  ] as const)("flags nothing for source %s with disposition %s", (source, disposition) => {
+    expect(rulePolicyIgnored([dir("default-src")], { source, disposition })).toEqual([]);
+  });
+
+  it("flags nothing with the default context", () => {
+    expect(rulePolicyIgnored([dir("default-src")])).toEqual([]);
+  });
+});
+
+describe("ruleReportUriWithoutReportTo in a meta policy", () => {
+  it("stays quiet, because report-uri is ignored in meta anyway", () => {
+    expect(
+      ruleReportUriWithoutReportTo([dir("report-uri")], { source: "meta", disposition: "enforce" }),
+    ).toEqual([]);
+  });
+});
+
 describe("runRules / ALL_RULES", () => {
   it("aggregates issues from every registered rule", () => {
     const issues = runRules([dir("widget-src"), dir("widget-src")]);
@@ -365,6 +431,6 @@ describe("runRules / ALL_RULES", () => {
   });
 
   it("exposes the same number of rule functions in ALL_RULES", () => {
-    expect(ALL_RULES.length).toBe(12);
+    expect(ALL_RULES.length).toBe(14);
   });
 });

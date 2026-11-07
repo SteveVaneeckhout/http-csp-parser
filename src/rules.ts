@@ -1,14 +1,26 @@
-import type { Issue, ParsedDirective } from "./types.js";
+import type { Issue, ParsedDirective, PolicyDisposition, PolicySource } from "./types.js";
 import {
   BROAD_SCHEMES,
   DEPRECATED_DIRECTIVES,
   FETCH_DIRECTIVES,
   KNOWN_DIRECTIVES,
+  META_IGNORED_DIRECTIVES,
   NO_VALUE_DIRECTIVES,
+  REPORT_ONLY_IGNORED_DIRECTIVES,
   REQUIRES_SOURCE_LIST,
 } from "./vocabulary.js";
 
-export type Rule = (directives: readonly ParsedDirective[]) => readonly Issue[];
+export interface PolicyContext {
+  readonly source: PolicySource;
+  readonly disposition: PolicyDisposition;
+}
+
+export const DEFAULT_CONTEXT: PolicyContext = { source: "header", disposition: "enforce" };
+
+export type Rule = (
+  directives: readonly ParsedDirective[],
+  context?: PolicyContext,
+) => readonly Issue[];
 
 export const ruleDuplicateDirective: Rule = (directives) => {
   const issues: Issue[] = [];
@@ -130,7 +142,11 @@ export const ruleDeprecatedDirective: Rule = (directives) => {
   return issues;
 };
 
-export const ruleReportUriWithoutReportTo: Rule = (directives) => {
+export const ruleReportUriWithoutReportTo: Rule = (directives, context = DEFAULT_CONTEXT) => {
+  // In a meta policy report-uri is ignored altogether; ruleIgnoredDirective reports that.
+  if (context.source === "meta") {
+    return [];
+  }
   const hasReportUri = directives.some((d) => d.name === "report-uri");
   const hasReportTo = directives.some((d) => d.name === "report-to");
   if (!hasReportUri || hasReportTo) {
@@ -230,6 +246,45 @@ export const ruleBroadScheme: Rule = (directives) => {
   return issues;
 };
 
+export const rulePolicyIgnored: Rule = (_directives, context = DEFAULT_CONTEXT) => {
+  if (context.source !== "meta" || context.disposition !== "report") {
+    return [];
+  }
+  return [
+    {
+      code: "policy-ignored",
+      level: "error",
+      message:
+        "Content-Security-Policy-Report-Only is not supported in a <meta> element; browsers ignore the whole policy.",
+    },
+  ];
+};
+
+export const ruleIgnoredDirective: Rule = (directives, context = DEFAULT_CONTEXT) => {
+  // A report-only meta policy is ignored as a whole; rulePolicyIgnored covers it.
+  if (context.source === "meta" && context.disposition === "report") {
+    return [];
+  }
+  const issues: Issue[] = [];
+  for (const d of directives) {
+    let where: string | undefined;
+    if (context.source === "meta" && META_IGNORED_DIRECTIVES.has(d.name)) {
+      where = "a policy delivered through a <meta> element";
+    } else if (context.disposition === "report" && REPORT_ONLY_IGNORED_DIRECTIVES.has(d.name)) {
+      where = "a Content-Security-Policy-Report-Only policy";
+    }
+    if (where !== undefined) {
+      issues.push({
+        code: "directive-ignored",
+        level: "error",
+        message: `Directive "${d.name}" is ignored in ${where}.`,
+        directive: d.name,
+      });
+    }
+  }
+  return issues;
+};
+
 export const ALL_RULES: readonly Rule[] = [
   ruleDuplicateDirective,
   ruleDuplicateSource,
@@ -243,12 +298,17 @@ export const ALL_RULES: readonly Rule[] = [
   ruleStrictDynamicHostIgnored,
   ruleUnsafeInlineWithUnsafeEval,
   ruleBroadScheme,
+  rulePolicyIgnored,
+  ruleIgnoredDirective,
 ];
 
-export function runRules(directives: readonly ParsedDirective[]): readonly Issue[] {
+export function runRules(
+  directives: readonly ParsedDirective[],
+  context: PolicyContext = DEFAULT_CONTEXT,
+): readonly Issue[] {
   const issues: Issue[] = [];
   for (const rule of ALL_RULES) {
-    issues.push(...rule(directives));
+    issues.push(...rule(directives, context));
   }
   return issues;
 }

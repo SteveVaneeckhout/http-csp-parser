@@ -60,6 +60,16 @@ export const KNOWN_DIRECTIVES: ReadonlySet<string> = FETCH_DIRECTIVES.union(DOCU
   .union(NO_VALUE_DIRECTIVES)
   .union(new Set(["plugin-types", "referrer"]));
 
+// CSP3 §3.3: not supported in a policy delivered through a <meta> element.
+export const META_IGNORED_DIRECTIVES: ReadonlySet<string> = new Set([
+  "frame-ancestors",
+  "report-uri",
+  "sandbox",
+]);
+
+// CSP3 §6.3.2: sandbox is ignored in a Content-Security-Policy-Report-Only header.
+export const REPORT_ONLY_IGNORED_DIRECTIVES: ReadonlySet<string> = new Set(["sandbox"]);
+
 export const REQUIRES_SOURCE_LIST: ReadonlySet<string> = new Set([
   ...FETCH_DIRECTIVES,
   "base-uri",

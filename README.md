@@ -34,11 +34,16 @@ console.log(warnings.map((w) => w.code));
 
 ## API
 
-### `parse(input: string): ParseResult`
+### `parse(input: string, options?: ParseOptions): ParseResult`
 
 Parses, classifies, and analyzes a CSP header in a single pass.
 
 ```ts
+interface ParseOptions {
+  readonly source?: "header" | "meta"; // default "header"
+  readonly disposition?: "enforce" | "report"; // default "enforce"
+}
+
 interface ParseResult {
   readonly directives: readonly ParsedDirective[];
   readonly errors: readonly Issue[];
@@ -81,6 +86,21 @@ interface Issue {
 }
 ```
 
+`ParseOptions` describes how the policy was delivered, using the CSP3 terms for a policy's source and disposition:
+
+| Delivered as                                  | Options                                                 |
+| --------------------------------------------- | ------------------------------------------------------- |
+| `Content-Security-Policy` header              | none, or `{ source: "header", disposition: "enforce" }` |
+| `Content-Security-Policy-Report-Only` header  | `{ disposition: "report" }`                             |
+| `<meta http-equiv="Content-Security-Policy">` | `{ source: "meta" }`                                    |
+
+Browsers ignore some directives depending on delivery. `parse()` reports them as `directive-ignored`:
+
+- `sandbox` in a Report-Only policy
+- `frame-ancestors`, `report-uri` and `sandbox` in a meta policy
+
+A Report-Only policy in `<meta>` is ignored as a whole and gets `policy-ignored`. Without options, none of these checks run, because the default is an enforced header.
+
 `errors` indicate something the policy specifies that browsers will reject or that the spec does not allow. `warnings` indicate something the policy will accept but that weakens its security guarantees.
 
 ## Issue reference
@@ -100,6 +120,8 @@ interface Issue {
 | `none-with-other-sources`           | `'none'` appears alongside other sources.                                                |
 | `no-value-directive-with-arguments` | A directive that takes no values (e.g. `upgrade-insecure-requests`) was given arguments. |
 | `missing-source-list`               | A directive that requires sources was given none.                                        |
+| `directive-ignored`                 | Browsers ignore this directive for the policy's delivery (see `ParseOptions`).           |
+| `policy-ignored`                    | A Report-Only policy delivered through `<meta>`, which browsers ignore entirely.         |
 
 > **Note**: `report-uri` accepts URI references (including relative paths) and `report-to` accepts a single group name token. Their values are classified as `kind: "uri"` and `kind: "token"` respectively, and source-list rules do not apply to them.
 >
