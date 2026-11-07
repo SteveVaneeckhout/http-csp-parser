@@ -315,6 +315,26 @@ describe("ruleBroadScheme", () => {
     expect(issues).toHaveLength(1);
   });
 
+  it("flags ws: and wss: schemes inside a fetch directive", () => {
+    const issues = ruleBroadScheme([
+      dir("connect-src", [
+        { raw: "ws:", kind: "scheme", scheme: "ws" },
+        { raw: "wss:", kind: "scheme", scheme: "wss" },
+      ]),
+    ]);
+    expect(issues.map((i) => i.source)).toEqual(["ws:", "wss:"]);
+    expect(issues[0]?.message).toContain("any host over ws");
+  });
+
+  it("does not flag a ws/wss host source", () => {
+    const issues = ruleBroadScheme([
+      dir("connect-src", [
+        { raw: "wss://ws.example.com", kind: "host", scheme: "wss", host: "ws.example.com" },
+      ]),
+    ]);
+    expect(issues).toEqual([]);
+  });
+
   it("does not flag narrow schemes like data:", () => {
     const issues = ruleBroadScheme([
       dir("img-src", [{ raw: "data:", kind: "scheme", scheme: "data" }]),

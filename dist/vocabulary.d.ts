@@ -9,4 +9,5 @@ export declare const KNOWN_DIRECTIVES: ReadonlySet<string>;
 export declare const REQUIRES_SOURCE_LIST: ReadonlySet<string>;
 export declare const SOURCE_KEYWORDS: ReadonlySet<string>;
 export declare const NONE_KEYWORD = "'none'";
+export declare const BROAD_SCHEMES: ReadonlySet<string>;
 export declare const KNOWN_SCHEMES: ReadonlySet<string>;

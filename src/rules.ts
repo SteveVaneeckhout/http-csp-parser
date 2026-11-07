@@ -1,5 +1,6 @@
 import type { Issue, ParsedDirective } from "./types.js";
 import {
+  BROAD_SCHEMES,
   DEPRECATED_DIRECTIVES,
   FETCH_DIRECTIVES,
   KNOWN_DIRECTIVES,
@@ -215,7 +216,7 @@ export const ruleBroadScheme: Rule = (directives) => {
       continue;
     }
     for (const s of d.sources) {
-      if (s.kind === "scheme" && (s.scheme === "http" || s.scheme === "https")) {
+      if (s.kind === "scheme" && s.scheme !== undefined && BROAD_SCHEMES.has(s.scheme)) {
         issues.push({
           code: "broad-scheme",
           level: "warning",

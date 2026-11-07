@@ -50,6 +50,12 @@ describe("parse (end-to-end)", () => {
     expect(codes("default-src 'self'; report-to csp")).toEqual([]);
   });
 
+  it("flags bare ws: and wss: in connect-src as broad-scheme, case-insensitively", () => {
+    const result = parse("default-src 'self'; connect-src 'self' WS: wss: wss://ws.example.com");
+    const broad = result.warnings.filter((w) => w.code === "broad-scheme");
+    expect(broad.map((w) => w.source)).toEqual(["WS:", "wss:"]);
+  });
+
   it("classifies sources within parsed directives", () => {
     const result = parse("script-src 'self' https://cdn.example.com 'nonce-abc=='");
     const directive = result.directives[0];

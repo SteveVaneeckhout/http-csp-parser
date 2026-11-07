@@ -1,4 +1,4 @@
-import { DEPRECATED_DIRECTIVES, FETCH_DIRECTIVES, KNOWN_DIRECTIVES, NO_VALUE_DIRECTIVES, REQUIRES_SOURCE_LIST, } from "./vocabulary.js";
+import { BROAD_SCHEMES, DEPRECATED_DIRECTIVES, FETCH_DIRECTIVES, KNOWN_DIRECTIVES, NO_VALUE_DIRECTIVES, REQUIRES_SOURCE_LIST, } from "./vocabulary.js";
 export const ruleDuplicateDirective = (directives) => {
     const issues = [];
     const seen = new Set();
@@ -190,7 +190,7 @@ export const ruleBroadScheme = (directives) => {
             continue;
         }
         for (const s of d.sources) {
-            if (s.kind === "scheme" && (s.scheme === "http" || s.scheme === "https")) {
+            if (s.kind === "scheme" && s.scheme !== undefined && BROAD_SCHEMES.has(s.scheme)) {
                 issues.push({
                     code: "broad-scheme",
                     level: "warning",

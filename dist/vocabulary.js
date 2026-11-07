@@ -66,6 +66,8 @@ export const SOURCE_KEYWORDS = new Set([
     "'unsafe-allow-redirects'",
 ]);
 export const NONE_KEYWORD = "'none'";
+// Bare schemes that allow any host: "https:" means every https origin.
+export const BROAD_SCHEMES = new Set(["http", "https", "ws", "wss"]);
 export const KNOWN_SCHEMES = new Set([
     "blob",
     "data",

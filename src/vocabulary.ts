@@ -77,6 +77,9 @@ export const SOURCE_KEYWORDS: ReadonlySet<string> = new Set([
 
 export const NONE_KEYWORD = "'none'";
 
+// Bare schemes that allow any host: "https:" means every https origin.
+export const BROAD_SCHEMES: ReadonlySet<string> = new Set(["http", "https", "ws", "wss"]);
+
 export const KNOWN_SCHEMES: ReadonlySet<string> = new Set([
   "blob",
   "data",
