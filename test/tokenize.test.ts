@@ -79,6 +79,34 @@ describe("tokenize", () => {
     expect(result.directives[0]?.valueTokens).toEqual(["'self'", "'unsafe-inline'"]);
   });
 
+  it("splits on every ASCII whitespace character (LF, FF, CR), not only space and tab", () => {
+    // Real-world policy from the crawler.ninja dump, served as a folded header.
+    const result = tokenize(
+      "default-src 'self';\n    frame-ancestors 'self' www.youtube.com;\r\n\tobject-src\f'none'",
+    );
+    expect(result.directives).toEqual([
+      { name: "default-src", raw: "default-src", valueTokens: ["'self'"] },
+      {
+        name: "frame-ancestors",
+        raw: "frame-ancestors",
+        valueTokens: ["'self'", "www.youtube.com"],
+      },
+      { name: "object-src", raw: "object-src", valueTokens: ["'none'"] },
+    ]);
+  });
+
+  it("emits one invalid-characters error that names the line break", () => {
+    const result = tokenize("default-src 'self';\n  img-src *");
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0]?.code).toBe("invalid-characters");
+    expect(result.errors[0]?.message).toContain("line break");
+  });
+
+  it("treats input that is only line breaks as empty", () => {
+    const result = tokenize("\r\n\n");
+    expect(result.errors.map((e) => e.code)).toEqual(["empty-input"]);
+  });
+
   it("emits invalid-characters when input contains non-ASCII characters", () => {
     const result = tokenize("default-src héllo.com");
     const invalid = result.errors.filter((e) => e.code === "invalid-characters");

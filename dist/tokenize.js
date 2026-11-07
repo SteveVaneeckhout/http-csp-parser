@@ -1,6 +1,8 @@
 const ASCII_PRINTABLE_RE = /^[\t\x20-\x7e]*$/;
-const WSP_TRIM_RE = /^[ \t]+|[ \t]+$/g;
-const WSP_SPLIT_RE = /[ \t]+/;
+const LINE_BREAK_RE = /[\r\n]/;
+// CSP splits on ASCII whitespace: TAB, LF, FF, CR and SPACE.
+const WSP_TRIM_RE = /^[\t\n\f\r ]+|[\t\n\f\r ]+$/g;
+const WSP_SPLIT_RE = /[\t\n\f\r ]+/;
 export function tokenize(input) {
     const errors = [];
     const directives = [];
@@ -16,7 +18,9 @@ export function tokenize(input) {
         errors.push({
             code: "invalid-characters",
             level: "error",
-            message: "CSP header contains non-ASCII or control characters.",
+            message: LINE_BREAK_RE.test(input)
+                ? "CSP header contains a line break. HTTP header values can't contain CR or LF; browsers that accept a folded header treat the break as a space."
+                : "CSP header contains non-ASCII or control characters.",
         });
     }
     const segments = input.split(";");
