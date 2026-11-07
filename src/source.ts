@@ -1,5 +1,10 @@
 import type { HashAlgorithm, Issue, ParsedSource } from "./types.js";
-import { NONE_KEYWORD, SOURCE_KEYWORDS } from "./vocabulary.js";
+import {
+  DIRECTIVE_VALUE_KEYWORDS,
+  NONE_KEYWORD,
+  SANDBOX_FLAGS,
+  SOURCE_KEYWORDS,
+} from "./vocabulary.js";
 
 export interface ClassifyResult {
   readonly source: ParsedSource;
@@ -14,6 +19,14 @@ const SCHEME_ONLY_RE = /^([a-z][a-z0-9+.-]*):$/i;
 const HOST_RE =
   /^(?:([a-z][a-z0-9+.-]*):\/\/)?(\*|(?:\*\.)?[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?)(?::([0-9]+|\*))?(\/[^\s]*)?$/i;
 const REPORT_TO_TOKEN_RE = /^[A-Za-z0-9_-]+$/;
+// tt-policy-name from the Trusted Types spec.
+const TT_POLICY_NAME_RE = /^[A-Za-z0-9#=_/@.%-]+$/;
+
+const EXPECTED_VALUES: Readonly<Record<string, string>> = {
+  "require-trusted-types-for": "'script'",
+  "trusted-types": "a policy name, '*', 'allow-duplicates' or 'none'",
+  webrtc: "'allow' or 'block'",
+};
 
 const DIGEST_BYTES: Readonly<Record<HashAlgorithm, number>> = {
   sha256: 32,
@@ -64,6 +77,15 @@ export function classifySource(token: string, directiveName: string): ClassifyRe
       ],
       warnings: [],
     };
+  }
+
+  if (directiveName === "sandbox") {
+    return classifySandboxFlag(token);
+  }
+
+  const valueKeywords = DIRECTIVE_VALUE_KEYWORDS.get(directiveName);
+  if (valueKeywords !== undefined) {
+    return classifyDirectiveValue(token, directiveName, valueKeywords);
   }
 
   if (token === "*") {
@@ -121,6 +143,59 @@ export function classifySource(token: string, directiveName: string): ClassifyRe
     ],
     warnings: [],
   };
+}
+
+function invalidValue(token: string, directiveName: string, message: string): ClassifyResult {
+  return {
+    source: { raw: token, kind: "unknown" },
+    errors: [
+      {
+        code: "invalid-source-syntax",
+        level: "error",
+        message,
+        directive: directiveName,
+        source: token,
+      },
+    ],
+    warnings: [],
+  };
+}
+
+function classifySandboxFlag(token: string): ClassifyResult {
+  if (SANDBOX_FLAGS.has(token.toLowerCase())) {
+    return { source: { raw: token, kind: "token" }, errors: [], warnings: [] };
+  }
+  return invalidValue(token, "sandbox", `Unknown sandbox flag "${token}"; browsers ignore it.`);
+}
+
+/** Values of directives that take keywords or names instead of a source list. */
+function classifyDirectiveValue(
+  token: string,
+  directiveName: string,
+  keywords: ReadonlySet<string>,
+): ClassifyResult {
+  const lower = token.toLowerCase();
+  if (keywords.has(lower)) {
+    return { source: { raw: token, kind: "keyword", keyword: lower }, errors: [], warnings: [] };
+  }
+  if (directiveName === "trusted-types") {
+    if (lower === NONE_KEYWORD) {
+      return {
+        source: { raw: token, kind: "none", keyword: NONE_KEYWORD },
+        errors: [],
+        warnings: [],
+      };
+    }
+    // "*" allows any policy name; it is not an origin wildcard.
+    if (token === "*" || TT_POLICY_NAME_RE.test(token)) {
+      return { source: { raw: token, kind: "token" }, errors: [], warnings: [] };
+    }
+  }
+  return invalidValue(
+    token,
+    directiveName,
+    `Invalid value "${token}" in "${directiveName}"; expected ${EXPECTED_VALUES[directiveName]}.`,
+  );
 }
 
 function classifyQuoted(token: string, directiveName: string): ClassifyResult {

@@ -8,8 +8,10 @@ import {
   NAVIGATION_DIRECTIVES,
   NO_VALUE_DIRECTIVES,
   NONE_KEYWORD,
+  OTHER_DIRECTIVES,
   REPORTING_DIRECTIVES,
   REQUIRES_SOURCE_LIST,
+  SANDBOX_FLAGS,
   SOURCE_KEYWORDS,
   TRUSTED_TYPES_DIRECTIVES,
 } from "../src/vocabulary.js";
@@ -23,6 +25,7 @@ describe("vocabulary", () => {
     expect(FETCH_DIRECTIVES.has("connect-src")).toBe(true);
     expect(FETCH_DIRECTIVES.has("font-src")).toBe(true);
     expect(FETCH_DIRECTIVES.has("object-src")).toBe(true);
+    expect(FETCH_DIRECTIVES.has("fenced-frame-src")).toBe(true);
   });
 
   it("includes document, navigation, reporting and trusted-types groups", () => {
@@ -58,11 +61,13 @@ describe("vocabulary", () => {
       ...REPORTING_DIRECTIVES,
       ...TRUSTED_TYPES_DIRECTIVES,
       ...NO_VALUE_DIRECTIVES,
+      ...OTHER_DIRECTIVES,
     ]) {
       expect(KNOWN_DIRECTIVES.has(name)).toBe(true);
     }
     expect(KNOWN_DIRECTIVES.has("plugin-types")).toBe(true);
     expect(KNOWN_DIRECTIVES.has("referrer")).toBe(true);
+    expect(KNOWN_DIRECTIVES.has("webrtc")).toBe(true);
   });
 
   it("REQUIRES_SOURCE_LIST excludes no-value directives", () => {
@@ -84,7 +89,20 @@ describe("vocabulary", () => {
     expect(SOURCE_KEYWORDS.has("'unsafe-hashes'")).toBe(true);
     expect(SOURCE_KEYWORDS.has("'inline-speculation-rules'")).toBe(true);
     expect(SOURCE_KEYWORDS.has("'report-sample'")).toBe(true);
+    expect(SOURCE_KEYWORDS.has("'report-sha256'")).toBe(true);
+    expect(SOURCE_KEYWORDS.has("'report-sha384'")).toBe(true);
+    expect(SOURCE_KEYWORDS.has("'report-sha512'")).toBe(true);
+    expect(SOURCE_KEYWORDS.has("'trusted-types-eval'")).toBe(true);
+    expect(SOURCE_KEYWORDS.has("'unsafe-webtransport-hashes'")).toBe(true);
     expect(NONE_KEYWORD).toBe("'none'");
+  });
+
+  it("sandbox flags are lowercase allow-* tokens", () => {
+    for (const flag of SANDBOX_FLAGS) {
+      expect(flag).toMatch(/^allow-[a-z-]+$/);
+    }
+    expect(SANDBOX_FLAGS.has("allow-scripts")).toBe(true);
+    expect(SANDBOX_FLAGS.has("allow-same-origin")).toBe(true);
   });
 
   it("includes common schemes", () => {

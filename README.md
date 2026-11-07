@@ -103,6 +103,15 @@ interface Issue {
 
 > **Note**: `report-uri` accepts URI references (including relative paths) and `report-to` accepts a single group name token. Their values are classified as `kind: "uri"` and `kind: "token"` respectively, and source-list rules do not apply to them.
 >
+> Some other directives don't take a source list either, so their values have their own grammar. Anything else gets `invalid-source-syntax`.
+>
+> | Directive                   | Accepted values                                                                 |
+> | --------------------------- | ------------------------------------------------------------------------------- |
+> | `sandbox`                   | The HTML sandbox flags (`allow-scripts`, `allow-forms`, …), as `kind: "token"`. |
+> | `trusted-types`             | Policy names and `*` (`kind: "token"`), `'allow-duplicates'` and `'none'`.      |
+> | `require-trusted-types-for` | `'script'`                                                                      |
+> | `webrtc`                    | `'allow'` or `'block'`                                                          |
+>
 > A line break in the header gets `invalid-characters`, because HTTP header values can't contain CR or LF. The tokens are still split the way CSP splits them, on any ASCII whitespace (TAB, LF, FF, CR, SPACE), so the rest of the analysis matches what a browser enforces.
 
 ### Warnings

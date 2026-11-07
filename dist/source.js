@@ -1,10 +1,17 @@
-import { NONE_KEYWORD, SOURCE_KEYWORDS } from "./vocabulary.js";
+import { DIRECTIVE_VALUE_KEYWORDS, NONE_KEYWORD, SANDBOX_FLAGS, SOURCE_KEYWORDS, } from "./vocabulary.js";
 const QUOTED_RE = /^'[^']*'$/;
 const NONCE_RE = /^'nonce-([A-Za-z0-9+/_-]+=*)'$/i;
 const HASH_RE = /^'(sha256|sha384|sha512)-([A-Za-z0-9+/_-]+=*)'$/i;
 const SCHEME_ONLY_RE = /^([a-z][a-z0-9+.-]*):$/i;
 const HOST_RE = /^(?:([a-z][a-z0-9+.-]*):\/\/)?(\*|(?:\*\.)?[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?)(?::([0-9]+|\*))?(\/[^\s]*)?$/i;
 const REPORT_TO_TOKEN_RE = /^[A-Za-z0-9_-]+$/;
+// tt-policy-name from the Trusted Types spec.
+const TT_POLICY_NAME_RE = /^[A-Za-z0-9#=_/@.%-]+$/;
+const EXPECTED_VALUES = {
+    "require-trusted-types-for": "'script'",
+    "trusted-types": "a policy name, '*', 'allow-duplicates' or 'none'",
+    webrtc: "'allow' or 'block'",
+};
 const DIGEST_BYTES = {
     sha256: 32,
     sha384: 48,
@@ -52,6 +59,13 @@ export function classifySource(token, directiveName) {
             ],
             warnings: [],
         };
+    }
+    if (directiveName === "sandbox") {
+        return classifySandboxFlag(token);
+    }
+    const valueKeywords = DIRECTIVE_VALUE_KEYWORDS.get(directiveName);
+    if (valueKeywords !== undefined) {
+        return classifyDirectiveValue(token, directiveName, valueKeywords);
     }
     if (token === "*") {
         return {
@@ -104,6 +118,48 @@ export function classifySource(token, directiveName) {
         ],
         warnings: [],
     };
+}
+function invalidValue(token, directiveName, message) {
+    return {
+        source: { raw: token, kind: "unknown" },
+        errors: [
+            {
+                code: "invalid-source-syntax",
+                level: "error",
+                message,
+                directive: directiveName,
+                source: token,
+            },
+        ],
+        warnings: [],
+    };
+}
+function classifySandboxFlag(token) {
+    if (SANDBOX_FLAGS.has(token.toLowerCase())) {
+        return { source: { raw: token, kind: "token" }, errors: [], warnings: [] };
+    }
+    return invalidValue(token, "sandbox", `Unknown sandbox flag "${token}"; browsers ignore it.`);
+}
+/** Values of directives that take keywords or names instead of a source list. */
+function classifyDirectiveValue(token, directiveName, keywords) {
+    const lower = token.toLowerCase();
+    if (keywords.has(lower)) {
+        return { source: { raw: token, kind: "keyword", keyword: lower }, errors: [], warnings: [] };
+    }
+    if (directiveName === "trusted-types") {
+        if (lower === NONE_KEYWORD) {
+            return {
+                source: { raw: token, kind: "none", keyword: NONE_KEYWORD },
+                errors: [],
+                warnings: [],
+            };
+        }
+        // "*" allows any policy name; it is not an origin wildcard.
+        if (token === "*" || TT_POLICY_NAME_RE.test(token)) {
+            return { source: { raw: token, kind: "token" }, errors: [], warnings: [] };
+        }
+    }
+    return invalidValue(token, directiveName, `Invalid value "${token}" in "${directiveName}"; expected ${EXPECTED_VALUES[directiveName]}.`);
 }
 function classifyQuoted(token, directiveName) {
     const lower = token.toLowerCase();

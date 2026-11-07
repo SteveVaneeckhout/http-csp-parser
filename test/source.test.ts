@@ -206,3 +206,113 @@ describe("classifySource", () => {
     expect(r.errors[0]?.code).toBe("invalid-source-syntax");
   });
 });
+
+describe("classifySource – sandbox flags", () => {
+  it.each([
+    "allow-scripts",
+    "allow-same-origin",
+    "Allow-Forms",
+    "allow-storage-access-by-user-activation",
+  ])("classifies %s as kind 'token' without issues", (flag) => {
+    const r = classifySource(flag, "sandbox");
+    expect(r.source).toEqual({ raw: flag, kind: "token" });
+    expect(r.errors).toEqual([]);
+    expect(r.warnings).toEqual([]);
+  });
+
+  it.each(["'self'", "https://us.plus500.com", "allow-everything"])(
+    "emits invalid-source-syntax for %s",
+    (token) => {
+      const r = classifySource(token, "sandbox");
+      expect(r.source.kind).toBe("unknown");
+      expect(r.errors.map((e) => e.code)).toEqual(["invalid-source-syntax"]);
+      expect(r.errors[0]?.message).toContain("Unknown sandbox flag");
+      expect(r.warnings).toEqual([]);
+    },
+  );
+});
+
+describe("classifySource – trusted types", () => {
+  it("accepts 'script' in require-trusted-types-for", () => {
+    const r = classifySource("'Script'", "require-trusted-types-for");
+    expect(r.source).toEqual({ raw: "'Script'", kind: "keyword", keyword: "'script'" });
+    expect(r.errors).toEqual([]);
+    expect(r.warnings).toEqual([]);
+  });
+
+  it.each(["'style'", "script"])(
+    "emits invalid-source-syntax for %s in require-trusted-types-for",
+    (token) => {
+      const r = classifySource(token, "require-trusted-types-for");
+      expect(r.errors.map((e) => e.code)).toEqual(["invalid-source-syntax"]);
+      expect(r.errors[0]?.message).toContain("expected 'script'");
+      expect(r.warnings).toEqual([]);
+    },
+  );
+
+  it.each(["default", "dompurify", "goog#html", "lit-html", "angular@bypass", "a/b.c=d%e_f"])(
+    "classifies policy name %s as kind 'token'",
+    (name) => {
+      const r = classifySource(name, "trusted-types");
+      expect(r.source).toEqual({ raw: name, kind: "token" });
+      expect(r.errors).toEqual([]);
+      expect(r.warnings).toEqual([]);
+    },
+  );
+
+  it("classifies 'allow-duplicates' as a keyword and 'none' as kind 'none'", () => {
+    expect(classifySource("'allow-duplicates'", "trusted-types").source).toEqual({
+      raw: "'allow-duplicates'",
+      kind: "keyword",
+      keyword: "'allow-duplicates'",
+    });
+    expect(classifySource("'none'", "trusted-types").source).toEqual({
+      raw: "'none'",
+      kind: "none",
+      keyword: "'none'",
+    });
+  });
+
+  it("treats * as a policy-name wildcard, not an origin wildcard", () => {
+    const r = classifySource("*", "trusted-types");
+    expect(r.source).toEqual({ raw: "*", kind: "token" });
+    expect(r.warnings).toEqual([]);
+  });
+
+  it.each(["'self'", "bad!name"])("emits invalid-source-syntax for %s in trusted-types", (t) => {
+    const r = classifySource(t, "trusted-types");
+    expect(r.errors.map((e) => e.code)).toEqual(["invalid-source-syntax"]);
+    expect(r.errors[0]?.message).toContain("a policy name");
+  });
+});
+
+describe("classifySource – webrtc", () => {
+  it.each(["'allow'", "'block'", "'BLOCK'"])("accepts %s", (token) => {
+    const r = classifySource(token, "webrtc");
+    expect(r.source.kind).toBe("keyword");
+    expect(r.source.keyword).toBe(token.toLowerCase());
+    expect(r.errors).toEqual([]);
+    expect(r.warnings).toEqual([]);
+  });
+
+  it.each(["'self'", "allow"])("emits invalid-source-syntax for %s", (token) => {
+    const r = classifySource(token, "webrtc");
+    expect(r.errors.map((e) => e.code)).toEqual(["invalid-source-syntax"]);
+    expect(r.errors[0]?.message).toContain("expected 'allow' or 'block'");
+  });
+});
+
+describe("classifySource – newer source keywords", () => {
+  it.each([
+    ["'report-sha256'", "script-src"],
+    ["'report-sha384'", "script-src-elem"],
+    ["'report-sha512'", "style-src"],
+    ["'trusted-types-eval'", "script-src"],
+    ["'unsafe-webtransport-hashes'", "connect-src"],
+  ])("accepts the CSP3 keyword %s", (keyword, directive) => {
+    const r = classifySource(keyword, directive);
+    expect(r.source).toEqual({ raw: keyword, kind: "keyword", keyword });
+    expect(r.errors).toEqual([]);
+    expect(r.warnings).toEqual([]);
+  });
+});

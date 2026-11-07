@@ -112,4 +112,22 @@ describe("parse (end-to-end)", () => {
     const result = parse("script-src 'self' 'unsafe-inline' 'unsafe-eval'");
     expect(result.warnings.some((w) => w.code === "unsafe-inline-with-unsafe-eval")).toBe(true);
   });
+
+  it("accepts newer CSP3 syntax seen in the wild without false positives", () => {
+    // Real-world shapes from the crawler.ninja dump.
+    const result = parse(
+      "default-src 'self'; script-src 'self' 'report-sha256'; fenced-frame-src https://ads.example; " +
+        "require-trusted-types-for 'script'; trusted-types default dompurify goog#html 'allow-duplicates'; " +
+        "webrtc 'block'; sandbox allow-scripts allow-forms",
+    );
+    expect(result.errors).toEqual([]);
+    expect(result.warnings).toEqual([]);
+  });
+
+  it("flags hosts listed in sandbox", () => {
+    const result = parse("sandbox allow-scripts https://us.plus500.com");
+    expect(result.errors.map((e) => [e.code, e.source])).toEqual([
+      ["invalid-source-syntax", "https://us.plus500.com"],
+    ]);
+  });
 });

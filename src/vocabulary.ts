@@ -2,6 +2,7 @@ export const FETCH_DIRECTIVES: ReadonlySet<string> = new Set([
   "child-src",
   "connect-src",
   "default-src",
+  "fenced-frame-src",
   "font-src",
   "frame-src",
   "img-src",
@@ -33,6 +34,9 @@ export const TRUSTED_TYPES_DIRECTIVES: ReadonlySet<string> = new Set([
   "trusted-types",
 ]);
 
+// Directives whose single value is 'allow' or 'block'.
+export const OTHER_DIRECTIVES: ReadonlySet<string> = new Set(["webrtc"]);
+
 export const NO_VALUE_DIRECTIVES: ReadonlySet<string> = new Set([
   "block-all-mixed-content",
   "upgrade-insecure-requests",
@@ -52,6 +56,7 @@ export const KNOWN_DIRECTIVES: ReadonlySet<string> = FETCH_DIRECTIVES.union(DOCU
   .union(NAVIGATION_DIRECTIVES)
   .union(REPORTING_DIRECTIVES)
   .union(TRUSTED_TYPES_DIRECTIVES)
+  .union(OTHER_DIRECTIVES)
   .union(NO_VALUE_DIRECTIVES)
   .union(new Set(["plugin-types", "referrer"]));
 
@@ -72,6 +77,11 @@ export const SOURCE_KEYWORDS: ReadonlySet<string> = new Set([
   "'wasm-unsafe-eval'",
   "'inline-speculation-rules'",
   "'report-sample'",
+  "'report-sha256'",
+  "'report-sha384'",
+  "'report-sha512'",
+  "'trusted-types-eval'",
+  "'unsafe-webtransport-hashes'",
   "'unsafe-allow-redirects'",
 ]);
 
@@ -91,4 +101,30 @@ export const KNOWN_SCHEMES: ReadonlySet<string> = new Set([
   "mediastream",
   "ws",
   "wss",
+]);
+
+// Sandbox flags from the HTML spec, plus allow-storage-access-by-user-activation from the
+// Storage Access API. Matched ASCII case-insensitively; unknown flags are ignored by browsers.
+export const SANDBOX_FLAGS: ReadonlySet<string> = new Set([
+  "allow-downloads",
+  "allow-forms",
+  "allow-modals",
+  "allow-orientation-lock",
+  "allow-pointer-lock",
+  "allow-popups",
+  "allow-popups-to-escape-sandbox",
+  "allow-presentation",
+  "allow-same-origin",
+  "allow-scripts",
+  "allow-storage-access-by-user-activation",
+  "allow-top-navigation",
+  "allow-top-navigation-by-user-activation",
+  "allow-top-navigation-to-custom-protocols",
+]);
+
+// Value keywords for directives that don't take a source list.
+export const DIRECTIVE_VALUE_KEYWORDS: ReadonlyMap<string, ReadonlySet<string>> = new Map([
+  ["require-trusted-types-for", new Set(["'script'"])],
+  ["trusted-types", new Set(["'allow-duplicates'"])],
+  ["webrtc", new Set(["'allow'", "'block'"])],
 ]);
