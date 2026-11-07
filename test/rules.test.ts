@@ -9,6 +9,7 @@ import {
   ruleMissingSourceList,
   ruleNoneWithOtherSources,
   ruleNoValueDirectiveWithArguments,
+  ruleReportUriWithoutReportTo,
   ruleStrictDynamicHostIgnored,
   ruleUnknownDirective,
   ruleUnsafeInlineWithUnsafeEval,
@@ -168,14 +169,41 @@ describe("ruleMissingSourceList", () => {
 
 describe("ruleDeprecatedDirective", () => {
   it("flags deprecated directives", () => {
-    const issues = ruleDeprecatedDirective([dir("report-uri"), dir("plugin-types")]);
+    const issues = ruleDeprecatedDirective([dir("referrer"), dir("plugin-types")]);
     expect(issues).toHaveLength(2);
     expect(issues.every((i) => i.code === "deprecated-directive")).toBe(true);
+  });
+
+  it("leaves report-uri to ruleReportUriWithoutReportTo", () => {
+    expect(ruleDeprecatedDirective([dir("report-uri")])).toEqual([]);
   });
 
   it("does not flag current directives", () => {
     const issues = ruleDeprecatedDirective([dir("default-src")]);
     expect(issues).toEqual([]);
+  });
+});
+
+describe("ruleReportUriWithoutReportTo", () => {
+  it("warns when report-uri is used without report-to", () => {
+    const issues = ruleReportUriWithoutReportTo([dir("default-src"), dir("report-uri")]);
+    expect(issues).toHaveLength(1);
+    expect(issues[0]?.code).toBe("report-uri-without-report-to");
+    expect(issues[0]?.level).toBe("warning");
+    expect(issues[0]?.directive).toBe("report-uri");
+  });
+
+  it("does not warn when report-uri is paired with report-to", () => {
+    expect(ruleReportUriWithoutReportTo([dir("report-uri"), dir("report-to")])).toEqual([]);
+    expect(ruleReportUriWithoutReportTo([dir("report-to"), dir("report-uri")])).toEqual([]);
+  });
+
+  it("does not warn when only report-to is used", () => {
+    expect(ruleReportUriWithoutReportTo([dir("report-to")])).toEqual([]);
+  });
+
+  it("does not warn when neither reporting directive is used", () => {
+    expect(ruleReportUriWithoutReportTo([dir("default-src")])).toEqual([]);
   });
 });
 
@@ -317,6 +345,6 @@ describe("runRules / ALL_RULES", () => {
   });
 
   it("exposes the same number of rule functions in ALL_RULES", () => {
-    expect(ALL_RULES.length).toBe(11);
+    expect(ALL_RULES.length).toBe(12);
   });
 });

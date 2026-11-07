@@ -114,6 +114,21 @@ export const ruleDeprecatedDirective = (directives) => {
     }
     return issues;
 };
+export const ruleReportUriWithoutReportTo = (directives) => {
+    const hasReportUri = directives.some((d) => d.name === "report-uri");
+    const hasReportTo = directives.some((d) => d.name === "report-to");
+    if (!hasReportUri || hasReportTo) {
+        return [];
+    }
+    return [
+        {
+            code: "report-uri-without-report-to",
+            level: "warning",
+            message: 'Directive "report-uri" is deprecated; add "report-to" (with a Reporting-Endpoints header) and keep "report-uri" as a fallback for older browsers.',
+            directive: "report-uri",
+        },
+    ];
+};
 export const ruleMissingDefaultOrScriptSrc = (directives) => {
     if (directives.length === 0) {
         return [];
@@ -196,6 +211,7 @@ export const ALL_RULES = [
     ruleNoValueDirectiveWithArguments,
     ruleMissingSourceList,
     ruleDeprecatedDirective,
+    ruleReportUriWithoutReportTo,
     ruleMissingDefaultOrScriptSrc,
     ruleStrictDynamicHostIgnored,
     ruleUnsafeInlineWithUnsafeEval,

@@ -36,11 +36,18 @@ describe("parse (end-to-end)", () => {
     expect(codes.has("unknown-directive")).toBe(true);
     expect(codes.has("none-with-other-sources")).toBe(true);
     expect(codes.has("no-value-directive-with-arguments")).toBe(true);
-    expect(codes.has("deprecated-directive")).toBe(true);
+    expect(codes.has("report-uri-without-report-to")).toBe(true);
     expect(codes.has("unsafe-inline")).toBe(true);
     expect(codes.has("unsafe-eval")).toBe(true);
     expect(codes.has("wildcard-source")).toBe(true);
     expect(codes.has("broad-scheme")).toBe(true);
+  });
+
+  it("warns about report-uri only when report-to is missing", () => {
+    const codes = (csp: string) => parse(csp).warnings.map((w) => w.code);
+    expect(codes("default-src 'self'; report-uri /r")).toEqual(["report-uri-without-report-to"]);
+    expect(codes("default-src 'self'; report-uri /r; report-to csp")).toEqual([]);
+    expect(codes("default-src 'self'; report-to csp")).toEqual([]);
   });
 
   it("classifies sources within parsed directives", () => {

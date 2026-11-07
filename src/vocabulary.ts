@@ -44,8 +44,9 @@ export const DEPRECATED_DIRECTIVES: ReadonlySet<string> = new Set([
   "plugin-types",
   "prefetch-src",
   "referrer",
-  "report-uri",
 ]);
+// "report-uri" is deprecated too, but it is the only reporting mechanism in older browsers
+// (e.g. Firefox before 149), so it is handled by ruleReportUriWithoutReportTo instead.
 
 export const KNOWN_DIRECTIVES: ReadonlySet<string> = FETCH_DIRECTIVES.union(DOCUMENT_DIRECTIVES)
   .union(NAVIGATION_DIRECTIVES)

@@ -105,19 +105,20 @@ interface Issue {
 
 ### Warnings
 
-| Code                                | Trigger                                                                                                                                |
-| ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| `unsafe-inline`                     | The keyword `'unsafe-inline'` is present.                                                                                              |
-| `unsafe-eval`                       | The keyword `'unsafe-eval'` is present.                                                                                                |
-| `unsafe-inline-with-unsafe-eval`    | A directive contains both `'unsafe-inline'` and `'unsafe-eval'`, which together effectively nullify XSS protection.                    |
-| `wildcard-source`                   | A bare `*` source is used.                                                                                                             |
-| `duplicate-source`                  | The same source value appears more than once within a single directive (case-insensitive `raw` match).                                 |
-| `deprecated-directive`              | The directive is deprecated (e.g. `report-uri`, `plugin-types`, `referrer`, `prefetch-src`, `navigate-to`, `block-all-mixed-content`). |
-| `missing-default-src-or-script-src` | The policy contains neither `default-src` nor `script-src`.                                                                            |
-| `strict-dynamic-host-ignored`       | A host or scheme source is listed alongside `'strict-dynamic'`, where browsers will ignore it.                                         |
-| `broad-scheme`                      | A fetch directive includes the bare `http:` or `https:` scheme as a source.                                                            |
-| `unknown-source-keyword`            | A `'…'`-quoted token is not a recognized CSP source keyword.                                                                           |
-| `hash-length-mismatch`              | A hash source's digest does not decode to the size of its algorithm (32/48/64 bytes for sha256/384/512), so it can never match.        |
+| Code                                | Trigger                                                                                                                                                                                   |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `unsafe-inline`                     | The keyword `'unsafe-inline'` is present.                                                                                                                                                 |
+| `unsafe-eval`                       | The keyword `'unsafe-eval'` is present.                                                                                                                                                   |
+| `unsafe-inline-with-unsafe-eval`    | A directive contains both `'unsafe-inline'` and `'unsafe-eval'`, which together effectively nullify XSS protection.                                                                       |
+| `wildcard-source`                   | A bare `*` source is used.                                                                                                                                                                |
+| `duplicate-source`                  | The same source value appears more than once within a single directive (case-insensitive `raw` match).                                                                                    |
+| `deprecated-directive`              | The directive is deprecated (e.g. `plugin-types`, `referrer`, `prefetch-src`, `navigate-to`, `block-all-mixed-content`).                                                                  |
+| `report-uri-without-report-to`      | `report-uri` is used without `report-to`. Add `report-to` (plus a `Reporting-Endpoints` header) and keep `report-uri` as a fallback for older browsers; no warning when both are present. |
+| `missing-default-src-or-script-src` | The policy contains neither `default-src` nor `script-src`.                                                                                                                               |
+| `strict-dynamic-host-ignored`       | A host or scheme source is listed alongside `'strict-dynamic'`, where browsers will ignore it.                                                                                            |
+| `broad-scheme`                      | A fetch directive includes the bare `http:` or `https:` scheme as a source.                                                                                                               |
+| `unknown-source-keyword`            | A `'…'`-quoted token is not a recognized CSP source keyword.                                                                                                                              |
+| `hash-length-mismatch`              | A hash source's digest does not decode to the size of its algorithm (32/48/64 bytes for sha256/384/512), so it can never match.                                                           |
 
 ## Examples
 

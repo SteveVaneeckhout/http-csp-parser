@@ -37,7 +37,7 @@ describe("vocabulary", () => {
   });
 
   it("flags deprecated directives", () => {
-    expect(DEPRECATED_DIRECTIVES.has("report-uri")).toBe(true);
+    expect(DEPRECATED_DIRECTIVES.has("report-uri")).toBe(false);
     expect(DEPRECATED_DIRECTIVES.has("plugin-types")).toBe(true);
     expect(DEPRECATED_DIRECTIVES.has("referrer")).toBe(true);
     expect(DEPRECATED_DIRECTIVES.has("prefetch-src")).toBe(true);

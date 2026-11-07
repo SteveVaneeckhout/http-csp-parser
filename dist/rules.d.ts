@@ -7,6 +7,7 @@ export declare const ruleNoneWithOtherSources: Rule;
 export declare const ruleNoValueDirectiveWithArguments: Rule;
 export declare const ruleMissingSourceList: Rule;
 export declare const ruleDeprecatedDirective: Rule;
+export declare const ruleReportUriWithoutReportTo: Rule;
 export declare const ruleMissingDefaultOrScriptSrc: Rule;
 export declare const ruleStrictDynamicHostIgnored: Rule;
 export declare const ruleUnsafeInlineWithUnsafeEval: Rule;

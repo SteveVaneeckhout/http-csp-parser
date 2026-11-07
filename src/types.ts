@@ -19,6 +19,7 @@ export type IssueCode =
   | "unsafe-inline-with-unsafe-eval"
   | "wildcard-source"
   | "deprecated-directive"
+  | "report-uri-without-report-to"
   | "missing-default-src-or-script-src"
   | "strict-dynamic-host-ignored"
   | "broad-scheme"
